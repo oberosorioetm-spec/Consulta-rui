@@ -31,7 +31,7 @@ function googleDnsLookup(hostname: string, opts: any, callback: any) {
   });
 }
 
-function fetchDnpDirect(pNumDoc: string, pTipDoc: string, timeoutMs = 8000): Promise<any> {
+function fetchDnpDirect(pNumDoc: string, pTipDoc: string, timeoutMs = 2500): Promise<any> {
   return new Promise((resolve, reject) => {
     const postData = `pNumDoc=${encodeURIComponent(pNumDoc)}&pTipDoc=${encodeURIComponent(pTipDoc)}`;
     
@@ -73,7 +73,7 @@ function fetchDnpDirect(pNumDoc: string, pTipDoc: string, timeoutMs = 8000): Pro
           } catch (e) {
             // If DNP returned HTML instead of JSON
             if (data.includes('<title>') || data.includes('<!DOCTYPE') || data.includes('<html')) {
-              reject(new Error(`El portal DNP respondió con página HTML (código ${res.statusCode}). Verifique la disponibilidad del servicio oficial.`));
+              reject(new Error(`El portal DNP respondió con página HTML (código ${res.statusCode}).`));
             } else {
               resolve({ rawHtml: data, statusCode: res.statusCode });
             }
@@ -86,7 +86,7 @@ function fetchDnpDirect(pNumDoc: string, pTipDoc: string, timeoutMs = 8000): Pro
 
     req.on('timeout', () => {
       req.destroy();
-      reject(new Error('Tiempo de espera agotado (timeout) conectando con el portal del DNP.'));
+      reject(new Error('Tiempo de espera agotado en conexión directa DNP.'));
     });
 
     req.on('error', (err) => {
