@@ -28,7 +28,8 @@ import {
   getRuiBadgeStyle, 
   SAMPLE_BATCH_DATA,
   exportBatchToCsv,
-  exportBatchToExcel
+  exportBatchToExcel,
+  executeRuiQuery
 } from '../utils/colombianData';
 import { syncQueryToSheets } from '../utils/googleSheetsSync';
 
@@ -262,37 +263,10 @@ export const BatchQuery: React.FC<BatchQueryProps> = ({ onViewDetail }) => {
         await new Promise(r => setTimeout(r, delayMs));
       }
 
-      const res = await fetch('/api/query', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': 'ober_rui_key_sec_9876'
-        },
-        body: JSON.stringify({
-          pNumDoc: currentItem.docNum,
-          pTipDoc: currentItem.docType
-        })
-      });
+      const data = await executeRuiQuery(currentItem.docNum, currentItem.docType);
 
-      const rawText = await res.text();
-      let data: any = null;
-      try {
-        data = JSON.parse(rawText);
-      } catch {
-        // Not JSON
-      }
-
-      if (!res.ok) {
-        const errorMsg = data?.error || `Error HTTP ${res.status}`;
-        throw new Error(errorMsg);
-      }
-
-      if (!data) {
-        throw new Error('Respuesta inválida');
-      }
-
-      if (data.ok === false) {
-        throw new Error(data.error || 'Sin datos');
+      if (!data || data.ok === false) {
+        throw new Error(data?.error || 'Sin datos');
       }
 
       // Sync to Google Sheets silently in the background

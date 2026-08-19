@@ -15,7 +15,7 @@ import {
   Layers,
   ArrowRight
 } from 'lucide-react';
-import { DOCUMENT_TYPES, getRuiBadgeStyle } from '../utils/colombianData';
+import { DOCUMENT_TYPES, getRuiBadgeStyle, executeRuiQuery } from '../utils/colombianData';
 import { RuiQueryResult } from '../types';
 import { syncQueryToSheets } from '../utils/googleSheetsSync';
 
@@ -42,37 +42,10 @@ export const IndividualQuery: React.FC = () => {
     setResult(null);
 
     try {
-      const response = await fetch('/api/query', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-Key': 'ober_rui_key_sec_9876'
-        },
-        body: JSON.stringify({
-          pNumDoc: queryNum,
-          pTipDoc: queryType
-        })
-      });
+      const data = await executeRuiQuery(queryNum, queryType);
 
-      const rawText = await response.text();
-      let data: any = null;
-      try {
-        data = JSON.parse(rawText);
-      } catch {
-        // Not JSON
-      }
-
-      if (!response.ok) {
-        const errorMsg = data?.error || `Error HTTP ${response.status}: No se pudo completar la consulta con el DNP.`;
-        throw new Error(errorMsg);
-      }
-
-      if (!data) {
-        throw new Error('El servidor no retornó una respuesta en formato JSON.');
-      }
-
-      if (data.ok === false) {
-        throw new Error(data.error || 'El DNP no devolvió información para este documento.');
+      if (!data || data.ok === false) {
+        throw new Error(data?.error || 'El DNP no devolvió información para este documento.');
       }
 
       setResult(data);
@@ -82,7 +55,7 @@ export const IndividualQuery: React.FC = () => {
       });
     } catch (err: any) {
       console.error('Error querying RUI:', err);
-      setError(err.message || 'Error de conexión con la Ventanilla Social del DNP.');
+      setError(err.message || 'Error de conexión con el sistema de consulta RUI.');
     } finally {
       setLoading(false);
     }
